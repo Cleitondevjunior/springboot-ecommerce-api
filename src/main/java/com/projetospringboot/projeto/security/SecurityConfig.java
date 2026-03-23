@@ -33,15 +33,17 @@ public class SecurityConfig {
             // ===================== AUTORIZAÇÃO =====================
             .authorizeHttpRequests(auth -> auth
 
-                // 🔓 ROTAS PÚBLICAS
+                //  ROTAS PÚBLICAS
                 .requestMatchers("/auth/**").permitAll()
                 .requestMatchers("/h2-console/**").permitAll()
 
-                // 🔓 GETs públicos (opcional)
+                //  GETs públicos (opcional)
                 .requestMatchers(HttpMethod.GET, "/products/**").permitAll()
                 .requestMatchers(HttpMethod.GET, "/categories/**").permitAll()
-
-                // 🔒 resto precisa autenticação
+                .requestMatchers(HttpMethod.GET, "/orders/**").permitAll()
+                .requestMatchers(HttpMethod.GET, "/users/**").permitAll()
+                
+                //  resto precisa autenticação
                 .anyRequest().authenticated()
             );
 
