@@ -10,30 +10,53 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 
 import jakarta.persistence.*;
 
+/**
+ * Entidade que representa um produto do sistema.
+ *
+ * Contém informações básicas do produto, relacionamentos com categorias
+ * e itens de pedido, além de pequenas regras de negócio.
+ */
 @Entity
 @Table(name = "tb_product")
 public class Product implements Serializable {
 
     private static final long serialVersionUID = 1L;
 
+    /**
+     * Identificador do produto.
+     */
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    /**
+     * Nome do produto.
+     */
     @Column(nullable = false)
     private String name;
 
+    /**
+     * Descrição detalhada do produto.
+     */
     @Column(columnDefinition = "TEXT")
     private String description;
 
-    //  dinheiro sempre com precisão
+    /**
+     * Preço do produto com precisão monetária.
+     */
     @Column(nullable = false, precision = 10, scale = 2)
     private BigDecimal price;
 
+    /**
+     * URL da imagem do produto.
+     */
     private String imgUrl;
 
     // ===================== RELACIONAMENTOS =====================
 
+    /**
+     * Categorias associadas ao produto.
+     */
     @ManyToMany
     @JoinTable(
         name = "tb_product_category",
@@ -42,6 +65,9 @@ public class Product implements Serializable {
     )
     private Set<Category> categories = new HashSet<>();
 
+    /**
+     * Itens de pedido que referenciam este produto.
+     */
     @JsonIgnore
     @OneToMany(mappedBy = "id.product")
     private Set<OrderItem> items = new HashSet<>();
@@ -85,13 +111,20 @@ public class Product implements Serializable {
         return categories;
     }
 
-    //  derivado: pedidos relacionados
+    /**
+     * Retorna os pedidos relacionados ao produto.
+     *
+     * Método derivado a partir dos itens do pedido.
+     */
     @JsonIgnore
     public Set<Order> getOrders() {
+
         Set<Order> set = new HashSet<>();
+
         for (OrderItem item : items) {
             set.add(item.getOrder());
         }
+
         return set;
     }
 
@@ -119,7 +152,12 @@ public class Product implements Serializable {
 
     // ===================== REGRAS DE NEGÓCIO =====================
 
-    //  cálculo de desconto (precisão garantida)
+    /**
+     * Calcula o preço com desconto aplicado.
+     *
+     * @param percentage percentual de desconto (ex: 0.10 = 10%)
+     * @return preço com desconto
+     */
     public BigDecimal getPriceWithDiscount(BigDecimal percentage) {
 
         if (price == null || percentage == null) {
@@ -127,10 +165,15 @@ public class Product implements Serializable {
         }
 
         BigDecimal discount = price.multiply(percentage);
+
         return price.subtract(discount);
     }
 
-    //  validação simples (pode evoluir para @Valid depois)
+    /**
+     * Validação simples de preço.
+     *
+     * @return true se o preço for válido
+     */
     public boolean isValidPrice() {
         return price != null && price.compareTo(BigDecimal.ZERO) > 0;
     }
