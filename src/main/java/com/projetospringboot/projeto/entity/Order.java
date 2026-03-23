@@ -14,38 +14,74 @@ import com.projetospringboot.projeto.entity.enums.OrderStatus;
 
 import jakarta.persistence.*;
 
+/**
+ * Entidade que representa um pedido do sistema.
+ * 
+ * Contém relacionamento com usuário, itens e pagamento,
+ * além de regras de negócio como cálculo de total e desconto.
+ */
 @Entity
 @Table(name = "tb_order")
 public class Order implements Serializable {
 
     private static final long serialVersionUID = 1L;
 
+    /**
+     * Valor mínimo para aplicar desconto no pedido.
+     */
     private static final BigDecimal DISCOUNT_LIMIT = new BigDecimal("100.00");
+
+    /**
+     * Percentual de desconto aplicado quando o limite é atingido.
+     */
     private static final BigDecimal DISCOUNT_PERCENT = new BigDecimal("0.10");
 
+    /**
+     * Identificador único do pedido.
+     */
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @JsonFormat(shape = JsonFormat.Shape.STRING,
+    /**
+     * Momento em que o pedido foi realizado.
+     */
+    @JsonFormat(
+        shape = JsonFormat.Shape.STRING,
         pattern = "yyyy-MM-dd'T'HH:mm:ss'Z'",
-        timezone = "GMT")
+        timezone = "GMT"
+    )
     private Instant moment;
 
+    /**
+     * Status do pedido armazenado como Integer (código do enum).
+     */
     private Integer orderStatus;
 
+    /**
+     * Cliente responsável pelo pedido.
+     */
     @ManyToOne
     @JoinColumn(name = "client_id")
     private User client;
 
+    /**
+     * Itens do pedido.
+     */
     @OneToMany(mappedBy = "id.order")
     private Set<OrderItem> items = new HashSet<>();
 
+    /**
+     * Pagamento associado ao pedido.
+     */
     @OneToOne(mappedBy = "order", cascade = CascadeType.ALL)
     private Payment payment;
 
     public Order() {}
 
+    /**
+     * Construtor com parâmetros.
+     */
     public Order(Long id, Instant moment, OrderStatus orderStatus, User client) {
         this.id = id;
         this.moment = moment;
@@ -59,6 +95,9 @@ public class Order implements Serializable {
 
     public Instant getMoment() { return moment; }
 
+    /**
+     * Retorna o status do pedido como enum.
+     */
     public OrderStatus getOrderStatus() {
         return orderStatus == null ? null : OrderStatus.valueOf(orderStatus);
     }
@@ -75,6 +114,9 @@ public class Order implements Serializable {
 
     public void setMoment(Instant moment) { this.moment = moment; }
 
+    /**
+     * Define o status do pedido convertendo o enum para código.
+     */
     public void setOrderStatus(OrderStatus orderStatus) {
         if (orderStatus != null) {
             this.orderStatus = orderStatus.getCode();
@@ -83,6 +125,9 @@ public class Order implements Serializable {
 
     public void setClient(User client) { this.client = client; }
 
+    /**
+     * Define o pagamento e mantém o relacionamento bidirecional.
+     */
     public void setPayment(Payment payment) {
         this.payment = payment;
         if (payment != null) {
@@ -90,16 +135,20 @@ public class Order implements Serializable {
         }
     }
 
-    // ===================== AUX =====================
+    // ===================== AUXILIAR =====================
 
+    /**
+     * Padroniza valores monetários para 2 casas decimais.
+     */
     private BigDecimal scale(BigDecimal value) {
         return value.setScale(2, RoundingMode.HALF_EVEN);
     }
 
     // ===================== REGRAS DE NEGÓCIO =====================
 
-    //  Soma dos itens (já com desconto por item)
-   // @JsonIgnore //  importante: usado no  DTO, evita duplicação no JSON
+    /**
+     * Calcula o total dos itens do pedido.
+     */
     public BigDecimal getItemsTotal() {
 
         BigDecimal sum = BigDecimal.ZERO;
@@ -111,7 +160,12 @@ public class Order implements Serializable {
         return scale(sum);
     }
 
-    //  Desconto geral do pedido
+    /**
+     * Calcula o desconto do pedido.
+     * 
+     * Regra:
+     * - Se o total for maior que 100, aplica 10% de desconto.
+     */
     @JsonIgnore
     public BigDecimal getOrderDiscount() {
 
@@ -124,7 +178,9 @@ public class Order implements Serializable {
         return BigDecimal.ZERO;
     }
 
-    //  Total final
+    /**
+     * Calcula o total final do pedido.
+     */
     public BigDecimal getTotal() {
 
         BigDecimal result = getItemsTotal().subtract(getOrderDiscount());
