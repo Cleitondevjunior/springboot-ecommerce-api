@@ -9,21 +9,40 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 
 import jakarta.persistence.*;
 
+/**
+ * Entidade que representa uma categoria de produtos.
+ *
+ * Uma categoria pode estar associada a vários produtos,
+ * e um produto pode pertencer a várias categorias.
+ */
 @Entity
 @Table(name = "tb_category")
 public class Category implements Serializable {
 
     private static final long serialVersionUID = 1L;
 
+    /**
+     * Identificador da categoria.
+     */
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    /**
+     * Nome da categoria.
+     * Deve ser único no sistema.
+     */
     @Column(nullable = false, unique = true)
     private String name;
 
-    //  relacionamento muitos-para-muitos com Product
-    @JsonIgnore
+    // ===================== RELACIONAMENTOS =====================
+
+    /**
+     * Relação muitos-para-muitos com Product.
+     *
+     * mappedBy indica que o controle da relação está na entidade Product.
+     */
+    @JsonIgnore // evita loop na serialização JSON
     @ManyToMany(mappedBy = "categories")
     private Set<Product> products = new HashSet<>();
 
@@ -63,7 +82,11 @@ public class Category implements Serializable {
 
     // ===================== REGRAS DE NEGÓCIO =====================
 
-    //  exemplo útil (validação simples)
+    /**
+     * Validação simples para o nome da categoria.
+     *
+     * @return true se o nome for válido
+     */
     public boolean isValidName() {
         return name != null && !name.trim().isEmpty();
     }
