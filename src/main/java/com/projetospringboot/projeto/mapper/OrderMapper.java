@@ -5,19 +5,35 @@ import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Component;
 
+import com.projetospringboot.projeto.dto.OrderCreateDTO;
 import com.projetospringboot.projeto.dto.OrderDTO;
 import com.projetospringboot.projeto.dto.OrderItemDTO;
+import com.projetospringboot.projeto.dto.OrderUpdateDTO;
 import com.projetospringboot.projeto.entity.Order;
 import com.projetospringboot.projeto.entity.OrderItem;
 import com.projetospringboot.projeto.entity.User;
+import com.projetospringboot.projeto.entity.enums.OrderStatus;
 
+/**
+ * Classe responsável pelas conversões entre a entidade Order
+ * e os DTOs utilizados pela aplicação.
+ */
 @Component
 public class OrderMapper {
 
-    // ===================== ENTITY → DTO =====================
+    // ===================== ENTITY -> DTO =====================
+
+    /**
+     * Converte a entidade Order para OrderDTO.
+     *
+     * @param entity entidade do pedido
+     * @return DTO de resposta
+     */
     public OrderDTO toDTO(Order entity) {
 
-        if (entity == null) return null;
+        if (entity == null) {
+            return null;
+        }
 
         Long clientId = null;
         String clientName = null;
@@ -27,7 +43,8 @@ public class OrderMapper {
             clientName = entity.getClient().getName();
         }
 
-        List<OrderItemDTO> items = entity.getItems().stream()
+        List<OrderItemDTO> items = entity.getItems()
+                .stream()
                 .map(this::toItemDTO)
                 .collect(Collectors.toList());
 
@@ -39,7 +56,7 @@ public class OrderMapper {
         dto.setMoment(entity.getMoment());
         dto.setStatus(entity.getOrderStatus() != null ? entity.getOrderStatus().name() : null);
 
-        //  CAMPOS Subtotal,Desconto, total CORRETOS
+        // Campos calculados do pedido
         dto.setSubtotal(entity.getItemsTotal());
         dto.setDesconto(entity.getOrderDiscount());
         dto.setTotal(entity.getTotal());
@@ -49,7 +66,14 @@ public class OrderMapper {
         return dto;
     }
 
-    // ===================== ITEM → DTO =====================
+    // ===================== ITEM -> DTO =====================
+
+    /**
+     * Converte um item do pedido para OrderItemDTO.
+     *
+     * @param item item da entidade
+     * @return DTO do item
+     */
     private OrderItemDTO toItemDTO(OrderItem item) {
         return new OrderItemDTO(
                 item.getProduct().getName(),
@@ -60,20 +84,30 @@ public class OrderMapper {
         );
     }
 
-    // ===================== DTO → ENTITY =====================
-    public Order toEntity(OrderDTO dto) {
+    // ===================== CREATE DTO -> ENTITY =====================
 
-        if (dto == null) return null;
+    /**
+     * Converte OrderCreateDTO para entidade Order.
+     *
+     * Observação:
+     * neste ponto o cliente é associado apenas pelo ID.
+     * A carga completa da entidade pode ser validada na camada de service.
+     *
+     * @param dto dados de criação do pedido
+     * @return entidade Order
+     */
+    public Order toEntity(OrderCreateDTO dto) {
+
+        if (dto == null) {
+            return null;
+        }
 
         Order entity = new Order();
 
-        entity.setId(dto.getId());
         entity.setMoment(dto.getMoment());
 
         if (dto.getStatus() != null) {
-            entity.setOrderStatus(
-                com.projetospringboot.projeto.entity.enums.OrderStatus.valueOf(dto.getStatus())
-            );
+            entity.setOrderStatus(OrderStatus.valueOf(dto.getStatus()));
         }
 
         if (dto.getClientId() != null) {
@@ -83,5 +117,36 @@ public class OrderMapper {
         }
 
         return entity;
+    }
+
+    // ===================== UPDATE DTO -> ENTITY =====================
+
+    /**
+     * Atualiza a entidade Order com base no OrderUpdateDTO.
+     *
+     * Apenas os campos não nulos são alterados.
+     *
+     * @param entity entidade existente
+     * @param dto dados de atualização
+     */
+    public void updateEntity(Order entity, OrderUpdateDTO dto) {
+
+        if (entity == null || dto == null) {
+            return;
+        }
+
+        if (dto.getMoment() != null) {
+            entity.setMoment(dto.getMoment());
+        }
+
+        if (dto.getStatus() != null && !dto.getStatus().isBlank()) {
+            entity.setOrderStatus(OrderStatus.valueOf(dto.getStatus()));
+        }
+
+        if (dto.getClientId() != null) {
+            User user = new User();
+            user.setId(dto.getClientId());
+            entity.setClient(user);
+        }
     }
 }
