@@ -11,21 +11,37 @@ import jakarta.persistence.Embeddable;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 
+/**
+ * Classe que representa a chave composta da entidade OrderItem.
+ *
+ * A chave é formada por:
+ * - pedido (Order)
+ * - produto (Product)
+ *
+ * Essa abordagem permite que um pedido tenha múltiplos produtos,
+ * sem duplicar o mesmo produto dentro do mesmo pedido.
+ */
 @Embeddable
 public class OrderItemPK implements Serializable {
 
     private static final long serialVersionUID = 1L;
 
-    //  referência do pedido
-    @JsonIgnore
+    /**
+     * Referência ao pedido.
+     */
+    @JsonIgnore // evita loop na serialização
     @ManyToOne
     @JoinColumn(name = "order_id")
     private Order order;
 
-    //  referência do produto
+    /**
+     * Referência ao produto.
+     */
     @ManyToOne
     @JoinColumn(name = "product_id")
     private Product product;
+
+    // ===================== CONSTRUTORES =====================
 
     public OrderItemPK() {
     }
@@ -57,11 +73,17 @@ public class OrderItemPK implements Serializable {
 
     // ===================== EQUALS E HASHCODE =====================
 
+    /**
+     * Utiliza apenas os IDs de Order e Product para comparação.
+     *
+     * Isso evita problemas com proxies do Hibernate e garante
+     * consistência no contexto de persistência.
+     */
     @Override
     public int hashCode() {
         return Objects.hash(
-            order != null ? order.getId() : null,
-            product != null ? product.getId() : null
+                order != null ? order.getId() : null,
+                product != null ? product.getId() : null
         );
     }
 
