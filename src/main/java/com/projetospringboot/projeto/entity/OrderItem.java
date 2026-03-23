@@ -13,21 +13,49 @@ import jakarta.persistence.EmbeddedId;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Table;
 
+/**
+ * Entidade que representa um item de pedido.
+ *
+ * Essa entidade faz a ligação entre Order e Product,
+ * armazenando também quantidade, preço e regras de desconto.
+ */
 @Entity
 @Table(name = "tb_order_item")
 public class OrderItem implements Serializable {
 
     private static final long serialVersionUID = 1L;
 
+    /**
+     * Chave composta formada por:
+     * - pedido
+     * - produto
+     */
     @EmbeddedId
     private OrderItemPK id = new OrderItemPK();
 
+    /**
+     * Quantidade do produto no pedido.
+     */
     private Integer quantity;
+
+    /**
+     * Preço unitário do produto no momento da compra.
+     */
     private BigDecimal price;
 
     // ===================== CONSTANTES =====================
+
+    /**
+     * Desconto de 5% para compras a partir de 5 unidades.
+     */
     private static final BigDecimal DISCOUNT_5 = new BigDecimal("0.05");
+
+    /**
+     * Desconto de 10% para compras a partir de 10 unidades.
+     */
     private static final BigDecimal DISCOUNT_10 = new BigDecimal("0.10");
+
+    // ===================== CONSTRUTORES =====================
 
     public OrderItem() {
     }
@@ -41,58 +69,108 @@ public class OrderItem implements Serializable {
 
     // ===================== GETTERS =====================
 
+    /**
+     * Retorna o pedido associado ao item.
+     *
+     * É ignorado no JSON para evitar loop de serialização.
+     */
     @JsonIgnore
     public Order getOrder() {
         return id.getOrder();
     }
 
+    /**
+     * Retorna o produto associado ao item.
+     */
     public Product getProduct() {
         return id.getProduct();
     }
 
+    /**
+     * Retorna a quantidade comprada.
+     */
     public Integer getQuantity() {
         return quantity;
     }
 
+    /**
+     * Retorna o preço unitário do item.
+     */
     public BigDecimal getPrice() {
         return price;
     }
 
     // ===================== SETTERS =====================
 
+    /**
+     * Define o pedido associado ao item.
+     */
     public void setOrder(Order order) {
         id.setOrder(order);
     }
 
+    /**
+     * Define o produto associado ao item.
+     */
     public void setProduct(Product product) {
         id.setProduct(product);
     }
 
+    /**
+     * Define a quantidade do item.
+     */
     public void setQuantity(Integer quantity) {
         this.quantity = quantity;
     }
 
+    /**
+     * Define o preço unitário do item.
+     */
     public void setPrice(BigDecimal price) {
         this.price = price;
     }
 
     // ===================== MÉTODO AUXILIAR =====================
+
+    /**
+     * Padroniza valores monetários com 2 casas decimais.
+     *
+     * Usa HALF_EVEN, adequado para operações financeiras.
+     */
     private BigDecimal scale(BigDecimal value) {
         return value.setScale(2, RoundingMode.HALF_EVEN);
     }
 
     // ===================== REGRAS DE NEGÓCIO =====================
 
-    //  Subtotal bruto (sem desconto)
+    /**
+     * Calcula o subtotal bruto do item, sem desconto.
+     *
+     * Fórmula:
+     * preço unitário × quantidade
+     *
+     * @return subtotal bruto
+     */
     @JsonProperty("rawSubTotal")
     public BigDecimal getRawSubTotal() {
+
         if (price == null || quantity == null) {
             return BigDecimal.ZERO;
         }
+
         return scale(price.multiply(BigDecimal.valueOf(quantity)));
     }
 
-    //  Desconto por item
+    /**
+     * Calcula o desconto aplicado ao item com base na quantidade.
+     *
+     * Regras:
+     * - 10 ou mais unidades → 10% de desconto
+     * - 5 a 9 unidades → 5% de desconto
+     * - abaixo de 5 unidades → sem desconto
+     *
+     * @return valor do desconto
+     */
     @JsonProperty("discount")
     public BigDecimal getDiscount() {
 
@@ -114,7 +192,14 @@ public class OrderItem implements Serializable {
         return scale(discount);
     }
 
-    //  Subtotal final (com desconto)
+    /**
+     * Calcula o subtotal final do item já com desconto aplicado.
+     *
+     * Fórmula:
+     * subtotal bruto - desconto
+     *
+     * @return subtotal final
+     */
     @JsonProperty("subTotal")
     public BigDecimal getSubTotal() {
 
@@ -129,8 +214,8 @@ public class OrderItem implements Serializable {
     @Override
     public int hashCode() {
         return Objects.hash(
-            id.getOrder() != null ? id.getOrder().getId() : null,
-            id.getProduct() != null ? id.getProduct().getId() : null
+                id.getOrder() != null ? id.getOrder().getId() : null,
+                id.getProduct() != null ? id.getProduct().getId() : null
         );
     }
 
