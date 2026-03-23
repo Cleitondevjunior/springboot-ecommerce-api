@@ -24,7 +24,7 @@ public class OrderMapper {
     // ===================== ENTITY -> DTO =====================
 
     /**
-     * Converte a entidade Order para OrderDTO.
+     * Converte uma entidade Order para OrderDTO.
      *
      * @param entity entidade do pedido
      * @return DTO de resposta
@@ -69,9 +69,9 @@ public class OrderMapper {
     // ===================== ITEM -> DTO =====================
 
     /**
-     * Converte um item do pedido para OrderItemDTO.
+     * Converte um item da entidade para OrderItemDTO.
      *
-     * @param item item da entidade
+     * @param item item do pedido
      * @return DTO do item
      */
     private OrderItemDTO toItemDTO(OrderItem item) {
@@ -89,9 +89,8 @@ public class OrderMapper {
     /**
      * Converte OrderCreateDTO para entidade Order.
      *
-     * Observação:
-     * neste ponto o cliente é associado apenas pelo ID.
-     * A carga completa da entidade pode ser validada na camada de service.
+     * Neste ponto, o cliente é associado apenas pelo ID.
+     * A validação mais completa deve ficar na camada de service.
      *
      * @param dto dados de criação do pedido
      * @return entidade Order
@@ -106,7 +105,12 @@ public class OrderMapper {
 
         entity.setMoment(dto.getMoment());
 
-        if (dto.getStatus() != null) {
+        /**
+         * Observação:
+         * o valor recebido em dto.getStatus() deve ser exatamente
+         * o nome do enum, por exemplo: "PAID", "DELIVERED", etc.
+         */
+        if (dto.getStatus() != null && !dto.getStatus().isBlank()) {
             entity.setOrderStatus(OrderStatus.valueOf(dto.getStatus()));
         }
 
