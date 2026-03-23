@@ -9,25 +9,46 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 
 import jakarta.persistence.*;
 
+/**
+ * Entidade que representa o pagamento de um pedido.
+ *
+ * Relacionamento:
+ * - Um Payment está associado a um único Order.
+ * - Compartilha o mesmo ID do pedido (@MapsId).
+ */
 @Entity
 @Table(name = "tb_payment")
 public class Payment implements Serializable {
 
     private static final long serialVersionUID = 1L;
 
+    /**
+     * Identificador do pagamento.
+     * Compartilha o mesmo ID do pedido.
+     */
     @Id
     private Long id;
 
-    @JsonFormat(shape = JsonFormat.Shape.STRING,
+    /**
+     * Momento em que o pagamento foi realizado.
+     */
+    @JsonFormat(
+        shape = JsonFormat.Shape.STRING,
         pattern = "yyyy-MM-dd'T'HH:mm:ss'Z'",
-        timezone = "GMT")
+        timezone = "GMT"
+    )
     private Instant moment;
 
-    @JsonIgnore
+    /**
+     * Pedido associado ao pagamento.
+     */
+    @JsonIgnore // evita loop na serialização JSON
     @OneToOne
     @MapsId
     @JoinColumn(name = "order_id")
     private Order order;
+
+    // ===================== CONSTRUTORES =====================
 
     public Payment() {
     }
@@ -68,7 +89,11 @@ public class Payment implements Serializable {
 
     // ===================== REGRAS DE NEGÓCIO =====================
 
-    //  verifica se pagamento já foi realizado
+    /**
+     * Verifica se o pagamento já foi realizado.
+     *
+     * @return true se o pagamento foi efetuado
+     */
     public boolean isPaid() {
         return this.moment != null;
     }
