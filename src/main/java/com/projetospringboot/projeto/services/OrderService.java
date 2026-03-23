@@ -57,7 +57,7 @@ public class OrderService {
     // ===================== GET BY ID =====================
 
     /**
-     * Busca um pedido pelo ID.
+     * Busca um pedido pelo ID e retorna em formato DTO.
      *
      * @param id identificador do pedido
      * @return pedido convertido para DTO
@@ -67,6 +67,24 @@ public class OrderService {
     public OrderDTO findById(Long id) {
         Order order = findEntityById(id);
         return toDTO(order);
+    }
+
+    // ===================== BUSCAR ENTIDADE POR ID =====================
+
+    /**
+     * Busca a entidade Order pelo ID.
+     *
+     * Esse método foi deixado público para permitir reutilização
+     * no controller e em outras regras de negócio.
+     *
+     * @param id identificador do pedido
+     * @return entidade Order encontrada
+     * @throws EntityNotFoundException se o pedido não existir
+     */
+    @Transactional(readOnly = true)
+    public Order findEntityById(Long id) {
+        return orderRepository.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException("Pedido não encontrado. ID: " + id));
     }
 
     // ===================== INSERT =====================
@@ -113,29 +131,17 @@ public class OrderService {
     @Transactional
     public OrderDTO update(Long id, Order obj) {
 
+        // Busca o pedido já existente no banco
         Order entity = findEntityById(id);
 
+        // Atualiza apenas os campos permitidos
         updateData(entity, obj);
 
+        // Salva a entidade atualizada
         Order updated = orderRepository.save(entity);
 
+        // Retorna o pedido já convertido para DTO
         return toDTO(updated);
-    }
-
-    // ===================== BUSCA AUXILIAR =====================
-
-    /**
-     * Busca a entidade Order pelo ID.
-     *
-     * Método auxiliar para evitar repetição de código.
-     *
-     * @param id identificador do pedido
-     * @return entidade Order encontrada
-     * @throws EntityNotFoundException se o pedido não existir
-     */
-    private Order findEntityById(Long id) {
-        return orderRepository.findById(id)
-                .orElseThrow(() -> new EntityNotFoundException("Pedido não encontrado. ID: " + id));
     }
 
     // ===================== ENTITY -> DTO =====================
@@ -170,12 +176,12 @@ public class OrderService {
             dto.setStatus(order.getOrderStatus().name());
         }
 
-        // Campos calculados do pedido
+        // Preenche valores calculados do pedido
         dto.setSubtotal(order.getItemsTotal());
         dto.setDesconto(order.getOrderDiscount());
         dto.setTotal(order.getTotal());
 
-        // Lista de itens convertidos
+        // Preenche os itens convertidos
         dto.setItems(items);
 
         return dto;
@@ -204,8 +210,8 @@ public class OrderService {
     /**
      * Atualiza os campos permitidos da entidade Order.
      *
-     * @param entity entidade original
-     * @param obj novos dados
+     * @param entity entidade original vinda do banco
+     * @param obj novos dados recebidos para atualização
      */
     private void updateData(Order entity, Order obj) {
         entity.setMoment(obj.getMoment());
