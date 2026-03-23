@@ -8,10 +8,10 @@ import com.projetospringboot.projeto.dto.UserUpdateDTO;
 import com.projetospringboot.projeto.entity.User;
 
 /**
- * Classe responsável por converter:
- * Entity <-> DTO
- * 
- * Centraliza a lógica de transformação de dados.
+ * Classe responsável por conversões entre:
+ * - Entity <-> DTO
+ *
+ * Centraliza a lógica de transformação de dados da aplicação.
  */
 @Component
 public class UserMapper {
@@ -19,11 +19,18 @@ public class UserMapper {
     // ===================== ENTITY -> DTO =====================
 
     /**
-     * Converte Entity para DTO (resposta da API).
+     * Converte uma entidade User para UserDTO.
+     *
+     * Usado nas respostas da API para evitar exposição de dados sensíveis.
+     *
+     * @param entity entidade User
+     * @return UserDTO
      */
     public UserDTO toDTO(User entity) {
 
-        if (entity == null) return null;
+        if (entity == null) {
+            return null;
+        }
 
         return new UserDTO(
                 entity.getId(),
@@ -35,12 +42,18 @@ public class UserMapper {
     // ===================== CREATE DTO -> ENTITY =====================
 
     /**
-     * Converte UserCreateDTO para Entity.
-     * Usado no cadastro de usuário.
+     * Converte UserCreateDTO para entidade User.
+     *
+     * Utilizado no cadastro de novos usuários.
+     *
+     * @param dto dados de criação
+     * @return entidade User pronta para persistência
      */
     public User toEntity(UserCreateDTO dto) {
 
-        if (dto == null) return null;
+        if (dto == null) {
+            return null;
+        }
 
         User user = new User();
 
@@ -56,27 +69,36 @@ public class UserMapper {
 
     /**
      * Atualiza uma entidade existente com base no UserUpdateDTO.
-     * Apenas campos não nulos são atualizados.
+     *
+     * Apenas campos não nulos são atualizados (update parcial).
+     *
+     * @param entity entidade existente no banco
+     * @param dto dados de atualização
      */
     public void updateEntity(User entity, UserUpdateDTO dto) {
 
-        if (dto == null || entity == null) return;
+        if (entity == null || dto == null) {
+            return;
+        }
 
+        // Atualiza nome se informado
         if (dto.getName() != null) {
             entity.setName(dto.getName());
         }
 
+        // Atualiza email se informado
         if (dto.getEmail() != null) {
             entity.setEmail(dto.getEmail());
         }
 
+        // Atualiza telefone se informado
         if (dto.getPhone() != null) {
             entity.setPhone(dto.getPhone());
         }
 
         /**
-         * Regra importante:
-         * Só atualiza senha se vier preenchida.
+         * Regra de negócio:
+         * Senha só é atualizada se vier preenchida e válida.
          */
         if (dto.getPassword() != null && !dto.getPassword().isBlank()) {
             entity.setPassword(dto.getPassword());
