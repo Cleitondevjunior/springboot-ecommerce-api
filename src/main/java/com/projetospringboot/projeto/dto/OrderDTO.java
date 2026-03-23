@@ -10,7 +10,7 @@ import java.util.List;
  * DTO responsável por transportar os dados do pedido (Order).
  *
  * Utilizado na camada de resposta da API, evitando expor
- * diretamente a entidade.
+ * diretamente a entidade e garantindo controle sobre os dados retornados.
  */
 public class OrderDTO implements Serializable {
 
@@ -33,7 +33,7 @@ public class OrderDTO implements Serializable {
     private Instant moment;
 
     /**
-     * Status do pedido (convertido para String).
+     * Status do pedido (representado como String).
      */
     private String status;
 
@@ -43,12 +43,12 @@ public class OrderDTO implements Serializable {
     private BigDecimal total;
 
     /**
-     * Soma dos itens (antes do desconto).
+     * Soma dos itens antes do desconto.
      */
     private BigDecimal subtotal;
 
     /**
-     * Valor do desconto aplicado.
+     * Valor total do desconto aplicado.
      */
     private BigDecimal desconto;
 
@@ -84,7 +84,7 @@ public class OrderDTO implements Serializable {
         this.total = total;
         this.subtotal = subtotal;
         this.desconto = desconto;
-        this.items = items;
+        setItems(items); // evita null
     }
 
     // ===================== GETTERS =====================
@@ -125,6 +125,9 @@ public class OrderDTO implements Serializable {
 
     public void setDesconto(BigDecimal desconto) { this.desconto = desconto; }
 
+    /**
+     * Garante que a lista de itens nunca seja null.
+     */
     public void setItems(List<OrderItemDTO> items) {
         this.items = (items != null) ? items : new ArrayList<>();
     }
