@@ -17,8 +17,8 @@ import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 import com.projetospringboot.projeto.dto.OrderCreateDTO;
 import com.projetospringboot.projeto.dto.OrderDTO;
 import com.projetospringboot.projeto.dto.OrderUpdateDTO;
-import com.projetospringboot.projeto.mapper.OrderMapper;
 import com.projetospringboot.projeto.entity.Order;
+import com.projetospringboot.projeto.mapper.OrderMapper;
 import com.projetospringboot.projeto.services.OrderService;
 
 import jakarta.validation.Valid;
@@ -124,7 +124,8 @@ public class OrderController {
     /**
      * Atualiza um pedido existente.
      *
-     * Recebe um DTO de atualização e altera apenas os campos permitidos.
+     * Recebe um DTO de atualização e delega a regra de negócio
+     * para a camada de serviço.
      *
      * @param id identificador do pedido
      * @param dto dados para atualização
